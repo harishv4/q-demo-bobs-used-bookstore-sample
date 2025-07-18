@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Bookstore.Domain.Customers;
@@ -13,6 +14,7 @@ using Bookstore.Data.FileServices;
 using Bookstore.Domain.Addresses;
 using Bookstore.Data.ImageValidationServices;
 using Bookstore.Data.ImageResizeService;
+using Bookstore.Web.WcfClients;
 
 namespace Bookstore.Web.Startup
 {
@@ -23,7 +25,31 @@ namespace Bookstore.Web.Startup
         public static WebApplicationBuilder ConfigureDependencyInjection(this WebApplicationBuilder builder)
         {
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddTransient<IBookService, BookService>();
+            
+            // Check if WCF service is enabled
+            bool useWcfService = builder.Configuration.GetValue<bool>("WcfService:Enabled");
+            
+            if (useWcfService)
+            {
+                // Register WCF client factory
+                builder.Services.AddSingleton<WcfClientFactory>();
+                
+                // Register WCF client for BookService
+                builder.Services.AddTransient<IBookSearchServiceClient>(sp => 
+                {
+                    var factory = sp.GetRequiredService<WcfClientFactory>();
+                    return factory.CreateBookSearchServiceClient();
+                });
+                
+                // Register adapter that implements IBookService but calls WCF service
+                builder.Services.AddTransient<IBookService, BookServiceWcfAdapter>();
+            }
+            else
+            {
+                // Use direct implementation
+                builder.Services.AddTransient<IBookService, BookService>();
+            }
+            
             builder.Services.AddTransient<IOrderService, OrderService>();
             builder.Services.AddTransient<IReferenceDataService, ReferenceDataService>();
             builder.Services.AddTransient<IOfferService, OfferService>();

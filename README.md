@@ -41,6 +41,42 @@ When running under the _local_ profile the application will use a SQL Server Exp
 
 Launch profiles, contained in the application's launchSettings.json file, are used to determine whether you are running the application fully local (no AWS resources) or local with AWS resources. The launch profile that represents a fully local run, without using any AWS services, is called the _Local_ profile. The second profile, in which the application can be run locally but also make use of some AWS services, is called the _Integrated_ profile. See the [Deployment](#deployment) section for details on launching the application with the _Integrated_ profile.
 
+### Running with WCF Service
+
+The application supports running with the book search functionality implemented as a separate WCF service. This demonstrates a common modernization approach of extracting functionality into services. To run the application with the WCF service:
+
+1. Start the WCF host service first:
+   ```
+   cd app\Bookstore.WcfHost
+   dotnet run
+   ```
+   This will start the WCF service on http://localhost:8080/BookSearchService
+
+2. Enable the WCF client in the web application by setting `"WcfService:Enabled": true` in the _appsettings.Development.json_ file.
+
+3. Start the web application:
+   ```
+   cd app\Bookstore.Web
+   dotnet run --launch-profile Local
+   ```
+
+When the WCF service is enabled, the web application will use the WCF client to communicate with the service for book search functionality. If the WCF service is not running or if `"WcfService:Enabled"` is set to `false`, the application will use the direct implementation of the BookService.
+
+### Troubleshooting WCF Service
+
+If you encounter issues with the WCF service, try the following:
+
+1. **Contract Mismatch Errors**: If you see errors like `ActionNotSupportedException: The message with Action cannot be processed due to a ContractFilter mismatch`, ensure both the service and client interfaces have matching operation names and namespaces.
+
+2. **Navigation Property Errors**: When viewing book details, if you encounter `NullReferenceException` errors related to navigation properties (like Publisher, Genre, etc.), this is because these properties need to be properly initialized in the WCF client adapter.
+
+3. **Port Already in Use**: If port 8080 is already in use, you can kill the process using:
+   ```
+   netstat -ano | findstr :8080
+   taskkill /F /PID <PID>
+   ```
+
+4. **Restarting Services**: If you make changes to the service or client code, you'll need to restart both the WCF host and the web application for the changes to take effect.
 
 ## Deployment
 

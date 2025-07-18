@@ -1,0 +1,9 @@
+@echo off
+echo Starting WCF Service...
+start cmd /k "cd app\Bookstore.WcfHost && dotnet run"
+echo Waiting for WCF service to start...
+timeout /t 5
+echo Starting Web Application...
+start cmd /k "cd app\Bookstore.Web && dotnet run --launch-profile Local"
+echo Both services are starting. You can access the application at:
+echo http://localhost:5000 or https://localhost:5001
