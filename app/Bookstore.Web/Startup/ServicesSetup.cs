@@ -31,7 +31,14 @@ namespace Bookstore.Web.Startup
             builder.Services.AddAWSService<IAmazonRekognition>();
 
             var connString = GetDatabaseConnectionString(builder.Configuration);
-            builder.Services.AddDbContext<ApplicationDbContext>(option => option.UseSqlServer(connString));
+            if (connString.Contains(".db"))
+            {
+                builder.Services.AddDbContext<ApplicationDbContext>(option => option.UseSqlite(connString));
+            }
+            else
+            {
+                builder.Services.AddDbContext<ApplicationDbContext>(option => option.UseSqlServer(connString));
+            }
             builder.Services.AddSession();
 
             return builder;

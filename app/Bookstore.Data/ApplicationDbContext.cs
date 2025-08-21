@@ -35,6 +35,21 @@ namespace Bookstore.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // SQLite-specific configuration for RowVersion
+            if (Database.ProviderName == "Microsoft.EntityFrameworkCore.Sqlite")
+            {
+                // Configure RowVersion as nullable for SQLite
+                modelBuilder.Entity<Address>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<Book>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<Customer>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<Order>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<ShoppingCart>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<ShoppingCartItem>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<OrderItem>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<Offer>().Property(e => e.RowVersion).IsRequired(false);
+                modelBuilder.Entity<ReferenceDataItem>().Property(e => e.RowVersion).IsRequired(false);
+            }
+
             modelBuilder.Entity<Customer>().HasIndex(x => x.Sub).IsUnique();
 
             modelBuilder.Entity<Book>().HasOne(x => x.Publisher).WithMany().HasForeignKey(x => x.PublisherId).OnDelete(DeleteBehavior.Restrict);
