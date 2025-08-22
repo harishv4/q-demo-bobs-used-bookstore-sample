@@ -1,0 +1,58 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '6.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+    
+    - name: Run tests with coverage
+      run: |
+        dotnet test app/Bookstore.Domain.Tests/Bookstore.Domain.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory TestResults \
+          --logger trx
+    
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+    
+    - name: Generate coverage report
+      run: |
+        reportgenerator \
+          -reports:"TestResults/*/coverage.cobertura.xml" \
+          -targetdir:"TestResults/CoverageReport" \
+          -reporttypes:"Html;Cobertura"
+    
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: TestResults/CoverageReport/
+    
+    - name: Comment coverage on PR
+      if: github.event_name == 'pull_request'
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: TestResults/*/coverage.cobertura.xml
+        minimum_coverage: 75
+        fail_below_threshold: false
