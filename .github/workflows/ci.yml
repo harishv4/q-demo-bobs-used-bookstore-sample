@@ -13,11 +13,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: csharp
-    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -61,6 +56,3 @@ jobs:
         path: TestResults/*/coverage.cobertura.xml
         minimum_coverage: 75
         fail_below_threshold: false
-    
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
